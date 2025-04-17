@@ -20,13 +20,18 @@ export class TestController {
     return this.testService.create(createTestDto);
   }
 
-  @Get('all')
-  findAll() {
-    return this.testService.findAll();
+  @Get('reading')
+  findAllReadingTest() {
+    return this.testService.findAllReadingTest();
+  }
+
+  @Get('listening')
+  findAllListeningTest() {
+    return this.testService.findAllListeningTest();
   }
 
   @Get(':slug')
-  findOne(@Param('slug') slug: string) {
+  getTestBySlug(@Param('slug') slug: string) {
     return this.testService.getTestBySlug(slug);
   }
 
