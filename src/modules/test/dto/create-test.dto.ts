@@ -44,9 +44,14 @@ class Question {
   @IsString({ each: true })
   options?: string[];
 
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   @IsNotEmpty()
-  answer: string;
+  answer: string[];
+
+  @IsOptional()
+  @IsString()
+  explaination: string;
 }
 
 class QuestionGroup {

@@ -39,8 +39,11 @@ class Question {
   @Prop({ type: [String], default: [] })
   options?: string[]; // A, B, C, D
 
-  @Prop({ required: true })
-  answer: string;
+  @Prop({ type: [String], required: true })
+  answer: string[];
+
+  @Prop({ default: '' })
+  explaination: string;
 }
 
 @Schema()

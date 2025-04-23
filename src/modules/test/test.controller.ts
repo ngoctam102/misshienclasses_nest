@@ -37,11 +37,12 @@ export class TestController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTestDto: UpdateTestDto) {
-    return this.testService.update(+id, updateTestDto);
+    // @Body giúp chuyển đổi dữ liệu từ JSON sang dạng object, updateTestDto là một js object
+    return this.testService.update(id, updateTestDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.testService.remove(+id);
+    return this.testService.remove(id);
   }
 }

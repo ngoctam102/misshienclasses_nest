@@ -14,8 +14,6 @@ import { TestModule } from './modules/test/test.module';
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
         dbName: 'ielts',
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
       }),
       inject: [ConfigService],
     }),
