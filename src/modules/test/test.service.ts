@@ -85,17 +85,31 @@ export class TestService {
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<{ message: string; deletedId: string }> {
     const test = await this.testModel.findById(id).exec();
     if (!test) {
       throw new NotFoundException('Test not found');
     }
     try {
       await this.testModel.deleteOne({ _id: id });
-      return `Delete test with id: ${id} successfully`;
+      return {
+        message: `Test with id ${id} has been deleted successfully`,
+        deletedId: id,
+      };
     } catch (error) {
-      this.logger.error(`Error delete test with id ${id}:`, error.stack);
-      throw new BadRequestException('Delete test failed');
+      if (error.code === 11000) {
+        this.logger.error(
+          `Cannot delete test ${id} due to reference constraint:`,
+          error,
+        );
+        throw new BadRequestException(
+          'Cannot delete test due to existing references',
+        );
+      }
+      this.logger.error(`Error deleting test with id ${id}:`, error.stack);
+      throw new BadRequestException(
+        'Failed to delete test. Please try again later',
+      );
     }
   }
 }
