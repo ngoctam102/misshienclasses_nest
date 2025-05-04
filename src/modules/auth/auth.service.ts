@@ -38,6 +38,8 @@ export class AuthService {
     );
     const payload = {
       sub: user._id,
+      name: user.name,
+      role: user.role,
       approved: user.isApproved,
     };
     return {
@@ -47,12 +49,42 @@ export class AuthService {
     };
   }
 
-  async findPendingUser() {
-    const pendingUser = await this.userModel.find({
-      isApproved: false,
-      hasAttemptedLogin: true,
-    });
-    return pendingUser;
+  async logout(token: string) {
+    const decoded = await this.jwtService.verify(token);
+    await this.userModel.findByIdAndUpdate(
+      decoded.sub,
+      {
+        hasAttemptedLogin: false,
+        isApproved: false,
+      },
+      { new: true },
+    );
+    return {
+      success: true,
+      message: 'Đăng xuất thành công',
+    };
+  }
+
+  async findPendingUser(token: string) {
+    try {
+      const decoded = await this.jwtService.verify(token);
+      if (decoded.role !== 'admin') {
+        throw new UnauthorizedException('Bạn không có quyền truy cập');
+      }
+      const pendingUser = await this.userModel.find({
+        role: { $ne: 'admin' }, // Lấy tất cả user không phải admin
+        isApproved: false,
+        hasAttemptedLogin: true,
+      });
+      return {
+        success: true,
+        message: 'Danh sách tài khoản chờ duyệt',
+        data: pendingUser,
+      };
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException('Token không hợp lệ');
+    }
   }
 
   async approveUser(id: string) {
@@ -120,7 +152,12 @@ export class AuthService {
     }
 
     const newAccessToken = this.jwtService.sign(
-      { sub: payload.sub, approved: user.isApproved },
+      {
+        sub: payload.sub,
+        approved: user.isApproved,
+        name: payload.name,
+        role: payload.role,
+      },
       { secret: process.env.JWT_SECRET, expiresIn: '2h' },
     );
     return {

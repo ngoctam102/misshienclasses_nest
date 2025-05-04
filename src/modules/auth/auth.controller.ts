@@ -22,8 +22,12 @@ export class AuthController {
   }
 
   @Get('pending')
-  findPendingUser() {
-    return this.authService.findPendingUser();
+  findPendingUser(@Req() req: Request) {
+    const token: string = req.cookies?.token;
+    if (!token) {
+      throw new UnauthorizedException('Không tìm thấy token');
+    }
+    return this.authService.findPendingUser(token);
   }
 
   @Patch('approve/:id')
@@ -48,11 +52,19 @@ export class AuthController {
   @Post('refresh-token')
   refreshToken(@Req() req: Request) {
     const token: string = req.cookies?.token;
-    console.log('token', token);
     if (!token) {
       throw new UnauthorizedException('Không tìm thấy refresh token');
     }
     return this.authService.refreshToken(token);
+  }
+
+  @Post('logout')
+  logout(@Req() req: Request) {
+    const token: string = req.cookies?.token;
+    if (!token) {
+      throw new UnauthorizedException('Không tìm thấy refresh token');
+    }
+    return this.authService.logout(token);
   }
 
   @Get()
