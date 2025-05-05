@@ -13,6 +13,22 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  validateToken(
+    token: string,
+  ): { sub: string; name: string; role: string; approved: boolean } | null {
+    try {
+      const decoded = this.jwtService.verify<{
+        sub: string;
+        name: string;
+        role: string;
+        approved: boolean;
+      }>(token);
+      return decoded;
+    } catch {
+      return null;
+    }
+  }
+
   async login(loginDto: LoginDto): Promise<{
     success: boolean;
     message: string;
@@ -71,11 +87,13 @@ export class AuthService {
       if (decoded.role !== 'admin') {
         throw new UnauthorizedException('Bạn không có quyền truy cập');
       }
-      const pendingUser = await this.userModel.find({
-        role: { $ne: 'admin' }, // Lấy tất cả user không phải admin
-        isApproved: false,
-        hasAttemptedLogin: true,
-      });
+      const pendingUser = await this.userModel
+        .find({
+          role: { $ne: 'admin' },
+          isApproved: false,
+          hasAttemptedLogin: true,
+        })
+        .select('name email _id');
       return {
         success: true,
         message: 'Danh sách tài khoản chờ duyệt',

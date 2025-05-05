@@ -6,16 +6,19 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { TestService } from './test.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('test')
 export class TestController {
   constructor(private readonly testService: TestService) {}
 
   @Post('create')
+  @UseGuards(AdminGuard)
   create(@Body() createTestDto: CreateTestDto) {
     return this.testService.create(createTestDto);
   }
@@ -36,12 +39,13 @@ export class TestController {
   }
 
   @Patch(':id')
+  @UseGuards(AdminGuard)
   update(@Param('id') id: string, @Body() updateTestDto: UpdateTestDto) {
-    // @Body giúp chuyển đổi dữ liệu từ JSON sang dạng object, updateTestDto là một js object
     return this.testService.update(id, updateTestDto);
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   remove(@Param('id') id: string) {
     return this.testService.remove(id);
   }
