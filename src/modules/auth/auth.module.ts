@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '../user/schemas/user.schema';
+import { RecaptchaService } from './recaptcha.service';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { User, UserSchema } from '../user/schemas/user.schema';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [AuthService, RecaptchaService],
+  exports: [AuthService, RecaptchaService],
 })
 export class AuthModule {}

@@ -16,8 +16,8 @@ class Content {
   type: ContentType;
 
   @IsString()
-  @IsNotEmpty()
-  value: string;
+  @IsOptional()
+  value?: string;
 }
 
 class Question {

@@ -5,12 +5,14 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../user/schemas/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-
+import { RecaptchaService } from '@/modules/auth/recaptcha.service';
+import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly jwtService: JwtService,
+    private readonly recaptchaService: RecaptchaService,
   ) {}
 
   validateToken(
@@ -34,6 +36,10 @@ export class AuthService {
     message: string;
     accessToken: string;
   }> {
+    const isHuman = await this.recaptchaService.verify(loginDto.recaptchaToken);
+    if (!isHuman) {
+      throw new BadRequestException('Xác minh không hợp lệ');
+    }
     const user = await this.userModel.findOne({ email: loginDto.email });
     if (!user) {
       throw new UnauthorizedException('Email không tồn tại');

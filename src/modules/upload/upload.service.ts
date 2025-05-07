@@ -67,7 +67,8 @@ export class UploadService {
     }
 
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const filename = `${uniqueSuffix}-${file.originalname}`;
+    const sanitizedOriginalName = file.originalname.replace(/\s+/g, '_');
+    const filename = `${uniqueSuffix}-${sanitizedOriginalName}`;
     const filePath = path.join(uploadDir, filename);
 
     if (!file.buffer) {
@@ -91,7 +92,8 @@ export class UploadService {
     url: string;
   }> {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const filename = `${uniqueSuffix}-${file.originalname}`;
+    const sanitizedOriginalName = file.originalname.replace(/\s+/g, '_');
+    const filename = `${uniqueSuffix}-${sanitizedOriginalName}`;
     const key = `${folder}/${filename}`;
 
     if (!file.buffer) {

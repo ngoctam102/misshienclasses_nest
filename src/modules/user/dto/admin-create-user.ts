@@ -1,16 +1,32 @@
-import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
-import { CreateUserDto } from './create-user.dto';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
-export class AdminCreateUserDto extends CreateUserDto {
+export class AdminCreateUserDto {
+  @IsEmail()
   @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
   @IsString()
   role: string;
 
-  @IsNotEmpty()
   @IsBoolean()
   isApproved: boolean;
 
-  @IsNotEmpty()
   @IsBoolean()
   hasAttemptedLogin: boolean;
 }

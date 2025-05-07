@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { AdminCreateUserDto } from './dto/admin-create-user';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('user')
 export class UserController {
@@ -21,7 +24,14 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Post('admin/create')
+  @UseGuards(AdminGuard)
+  createByAdmin(@Body() adminCreateUserDto: AdminCreateUserDto) {
+    return this.userService.createByAdmin(adminCreateUserDto);
+  }
+
   @Get('all')
+  @UseGuards(AdminGuard)
   findAll() {
     return this.userService.findAll();
   }
@@ -32,16 +42,19 @@ export class UserController {
   }
 
   @Patch('update/:id')
+  @UseGuards(AdminGuard)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
+  @UseGuards(AdminGuard)
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
 
   @Patch('status/:id')
+  @UseGuards(AdminGuard)
   updateStatus(
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateStatusDto,

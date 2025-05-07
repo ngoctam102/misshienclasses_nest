@@ -12,7 +12,11 @@ export class TestService {
 
   constructor(@InjectModel(Test.name) private testModel: Model<Test>) {}
 
-  async create(createTestDto: CreateTestDto): Promise<Test> {
+  async create(createTestDto: CreateTestDto): Promise<{
+    success: boolean;
+    message: string;
+    data: Test;
+  }> {
     const checkTestSlugExists = await this.testModel.exists({
       test_slug: createTestDto.test_slug,
     });
@@ -20,12 +24,24 @@ export class TestService {
       throw new BadRequestException('Test slug already exists');
     }
     const createdTest = await this.testModel.create(createTestDto);
-    return createdTest as Test;
+    return {
+      success: true,
+      message: 'Test created successfully',
+      data: createdTest as Test,
+    };
   }
 
-  async findAll(): Promise<Test[]> {
+  async findAll(): Promise<{
+    success: boolean;
+    message: string;
+    data: Test[];
+  }> {
     const tests = await this.testModel.find();
-    return tests as Test[];
+    return {
+      success: true,
+      message: 'Get all tests successfully',
+      data: tests as Test[],
+    };
   }
 
   async findAllReadingTest(): Promise<Test[]> {
@@ -38,8 +54,20 @@ export class TestService {
     return listeningTests as Test[];
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} test`;
+  async findOne(id: string): Promise<{
+    success: boolean;
+    message: string;
+    data: Test;
+  }> {
+    const test = await this.testModel.findById(id).exec();
+    if (!test) {
+      throw new NotFoundException('Test not found');
+    }
+    return {
+      success: true,
+      message: 'Test found successfully',
+      data: test as Test,
+    };
   }
 
   async getTestBySlug(slug: string): Promise<Test> {
@@ -50,26 +78,35 @@ export class TestService {
     return test as Test;
   }
 
-  async update(id: string, updateTestDto: UpdateTestDto): Promise<Test> {
+  async update(
+    id: string,
+    updateTestDto: UpdateTestDto,
+  ): Promise<{
+    success: boolean;
+    message: string;
+  }> {
     const test = await this.testModel.findById(id).exec();
     if (!test) {
       throw new NotFoundException('Test not found');
     }
 
     const testToValidate = new this.testModel({
-      ...test,
+      ...test.toObject(),
       ...updateTestDto,
     });
 
     const validationError = testToValidate.validateSync();
     if (validationError) {
+      console.log('Validation error:', validationError);
       throw new BadRequestException(validationError.message);
     }
 
     try {
-      Object.assign(test, updateTestDto);
-      const updatedTest = await test.save();
-      return updatedTest;
+      await this.testModel.findByIdAndUpdate(id, updateTestDto, { new: true });
+      return {
+        success: true,
+        message: `Test with id ${id} updated successfully`,
+      };
     } catch (error) {
       if (error.code === 11000) {
         this.logger.error(
@@ -85,7 +122,10 @@ export class TestService {
     }
   }
 
-  async remove(id: string): Promise<{ message: string; deletedId: string }> {
+  async remove(id: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
     const test = await this.testModel.findById(id).exec();
     if (!test) {
       throw new NotFoundException('Test not found');
@@ -93,8 +133,8 @@ export class TestService {
     try {
       await this.testModel.deleteOne({ _id: id });
       return {
+        success: true,
         message: `Test with id ${id} has been deleted successfully`,
-        deletedId: id,
       };
     } catch (error) {
       if (error.code === 11000) {

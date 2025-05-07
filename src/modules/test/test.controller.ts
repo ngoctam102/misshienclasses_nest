@@ -33,6 +33,18 @@ export class TestController {
     return this.testService.findAllListeningTest();
   }
 
+  @Get('all')
+  @UseGuards(AdminGuard)
+  findAll() {
+    return this.testService.findAll();
+  }
+
+  @Get(':id')
+  @UseGuards(AdminGuard)
+  findOne(@Param('id') id: string) {
+    return this.testService.findOne(id);
+  }
+
   @Get(':slug')
   getTestBySlug(@Param('slug') slug: string) {
     return this.testService.getTestBySlug(slug);

@@ -3,9 +3,9 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import { join } from 'path';
+import * as path from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-
+console.log('STATIC PATH:', path.resolve(__dirname, '..', 'public'));
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
@@ -15,7 +15,7 @@ async function bootstrap() {
   const corsOptions = {
     origin: isProduction
       ? [configService.get('FRONTEND_URL')] // Chỉ cho phép domain production
-      : ['http://localhost:3000'], // Cho phép localhost trong development
+      : 'http://localhost:3000', // Cho phép cả localhost:3000
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Cho phép gửi cookie và header Authorization
     allowedHeaders: ['Content-Type', 'Authorization'], // Cho phép header Authorization
@@ -35,16 +35,15 @@ async function bootstrap() {
     }),
   );
 
-  // Global prefix
-  app.setGlobalPrefix('api'); // Đặt prefix cho các route
-
-  // Cấu hình static file
-  app.useStaticAssets(join(__dirname, '..', 'public'), {
+  // Cấu hình static file TRƯỚC KHI đặt global prefix
+  app.useStaticAssets(path.join(__dirname, '..', 'public'), {
     prefix: '/uploads/', // Thêm prefix cho static files
     setHeaders: (res) => {
       res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     },
   });
+  // Global prefix
+  app.setGlobalPrefix('api'); // Đặt prefix cho các route
 
   await app.listen(configService.get('PORT') || 3000);
 }

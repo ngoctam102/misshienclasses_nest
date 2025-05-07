@@ -8,8 +8,8 @@ class Content {
   @Prop({ required: true })
   type: ContentType;
 
-  @Prop({ required: true })
-  value: string; // text content, image URL, or raw HTML
+  @Prop()
+  value?: string; // text content, image URL, or raw HTML
 }
 
 const ContentSchema = SchemaFactory.createForClass(Content);

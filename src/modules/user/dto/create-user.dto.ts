@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
+// DTO cho người dùng thông thường đăng ký
 export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
@@ -13,6 +14,9 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
-  @IsNotEmpty()
   name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }
