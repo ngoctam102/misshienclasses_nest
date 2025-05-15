@@ -18,8 +18,8 @@ async function bootstrap() {
       : 'http://localhost:3000', // Cho phép cả localhost:3000
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Cho phép gửi cookie và header Authorization
-    allowedHeaders: ['Content-Type', 'Authorization'], // Cho phép header Authorization
-    exposedHeaders: ['Authorization'], // Cho phép client đọc token
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'], // Thêm Cookie vào allowed headers
+    exposedHeaders: ['Set-Cookie', 'Authorization'], // Thêm Set-Cookie vào exposed headers
     maxAge: 86400, // 24 hours
   };
   app.enableCors(corsOptions); // Cấu hình CORS

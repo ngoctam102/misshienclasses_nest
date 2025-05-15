@@ -24,11 +24,12 @@ export class AdminGuard implements CanActivate {
     }
 
     // Bước 1: Verify token và lấy thông tin user
-    const decodedToken = this.authService.validateToken(token) as {
+    const decodedToken = (await this.authService.validateToken(token)) as {
       sub: string;
       name: string;
       role: string;
       approved: boolean;
+      email: string;
     };
     if (!decodedToken) {
       throw new UnauthorizedException('Token không hợp lệ');

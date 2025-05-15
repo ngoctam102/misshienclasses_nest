@@ -12,6 +12,7 @@ import { TestService } from './test.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('test')
 export class TestController {
@@ -24,11 +25,13 @@ export class TestController {
   }
 
   @Get('reading')
+  @UseGuards(JwtAuthGuard)
   findAllReadingTest() {
     return this.testService.findAllReadingTest();
   }
 
   @Get('listening')
+  @UseGuards(JwtAuthGuard)
   findAllListeningTest() {
     return this.testService.findAllListeningTest();
   }
@@ -39,13 +42,14 @@ export class TestController {
     return this.testService.findAll();
   }
 
-  @Get(':id')
+  @Get('by-id/:id')
   @UseGuards(AdminGuard)
   findOne(@Param('id') id: string) {
     return this.testService.findOne(id);
   }
 
-  @Get(':slug')
+  @Get('by-slug/:slug')
+  @UseGuards(JwtAuthGuard)
   getTestBySlug(@Param('slug') slug: string) {
     return this.testService.getTestBySlug(slug);
   }

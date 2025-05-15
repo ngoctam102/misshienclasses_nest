@@ -7,6 +7,7 @@ import { TestModule } from './modules/test/test.module';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { ScoreModule } from './modules/score/score.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -23,6 +24,7 @@ import { UploadModule } from './modules/upload/upload.module';
     UserModule,
     AuthModule,
     UploadModule,
+    ScoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],

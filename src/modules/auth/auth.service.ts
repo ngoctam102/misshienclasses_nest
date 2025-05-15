@@ -9,24 +9,69 @@ import { RecaptchaService } from '@/modules/auth/recaptcha.service';
 import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class AuthService {
+  // Thời gian hết hạn token
+  private readonly TOKEN_EXPIRATION = {
+    admin: '365d',
+    user: '30s',
+  };
+
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly jwtService: JwtService,
     private readonly recaptchaService: RecaptchaService,
   ) {}
 
-  validateToken(
-    token: string,
-  ): { sub: string; name: string; role: string; approved: boolean } | null {
+  async validateToken(token: string): Promise<{
+    sub: string;
+    name: string;
+    role: string;
+    approved: boolean;
+    email: string;
+  } | null> {
+    console.log(
+      'AuthService - Bắt đầu validateToken với token:',
+      token.substring(0, 20) + '...',
+    );
     try {
       const decoded = this.jwtService.verify<{
         sub: string;
         name: string;
         role: string;
         approved: boolean;
+        email: string;
       }>(token);
+      console.log('AuthService - Token hợp lệ, thông tin user:', decoded);
       return decoded;
-    } catch {
+    } catch (error) {
+      console.log(
+        'AuthService - Lỗi xác thực token trong validateToken:',
+        error,
+      );
+      // Khi token hết hạn, reset trạng thái user
+      try {
+        const decoded = this.jwtService.decode(token);
+        if (decoded && typeof decoded === 'object' && 'sub' in decoded) {
+          console.log(
+            'AuthService - Đang reset trạng thái user với ID:',
+            decoded.sub,
+          );
+          const result = await this.userModel.findByIdAndUpdate(
+            decoded.sub,
+            {
+              hasAttemptedLogin: false,
+              isApproved: false,
+            },
+            { new: true },
+          );
+          if (result) {
+            console.log('AuthService - Đã reset trạng thái user thành công');
+          } else {
+            console.warn('AuthService - Không tìm thấy user để reset!!');
+          }
+        }
+      } catch (decodeError) {
+        console.error('AuthService - Lỗi khi decode token:', decodeError);
+      }
       return null;
     }
   }
@@ -35,6 +80,7 @@ export class AuthService {
     success: boolean;
     message: string;
     accessToken: string;
+    role: string;
   }> {
     const isHuman = await this.recaptchaService.verify(loginDto.recaptchaToken);
     if (!isHuman) {
@@ -58,33 +104,70 @@ export class AuthService {
       },
       { new: true },
     );
+    const expiresIn =
+      user.role === 'admin'
+        ? this.TOKEN_EXPIRATION.admin
+        : this.TOKEN_EXPIRATION.user;
     const payload = {
       sub: user._id,
       name: user.name,
+      email: user.email,
       role: user.role,
       approved: user.isApproved,
     };
     return {
       success: true,
       message: 'Đăng nhập thành công, chờ duyệt tài khoản',
-      accessToken: await this.jwtService.signAsync(payload),
+      accessToken: await this.jwtService.signAsync(payload, {
+        expiresIn: expiresIn,
+      }),
+      role: user.role,
     };
   }
 
   async logout(token: string) {
-    const decoded = await this.jwtService.verify(token);
-    await this.userModel.findByIdAndUpdate(
-      decoded.sub,
-      {
-        hasAttemptedLogin: false,
-        isApproved: false,
-      },
-      { new: true },
-    );
-    return {
-      success: true,
-      message: 'Đăng xuất thành công',
-    };
+    try {
+      // Thử decode token để lấy thông tin user
+      const decoded = this.jwtService.decode(token);
+      if (!decoded || !decoded.sub) {
+        console.warn('AuthService - Token không hợp lệ hoặc không có sub');
+        return {
+          success: true,
+          message: 'Đăng xuất thành công',
+        };
+      }
+
+      // Reset trạng thái user
+      const result = await this.userModel.findByIdAndUpdate(
+        decoded.sub,
+        {
+          hasAttemptedLogin: false,
+          isApproved: false,
+        },
+        { new: true },
+      );
+
+      if (!result) {
+        console.warn('AuthService - Không tìm thấy user để reset trạng thái');
+      } else {
+        console.log(
+          'AuthService - Đã reset trạng thái user thành công:',
+          result._id,
+        );
+      }
+
+      return {
+        success: true,
+        message: 'Đăng xuất thành công',
+      };
+    } catch (error) {
+      console.error('AuthService - Lỗi khi logout:', error);
+      // Vẫn trả về success để frontend có thể xóa cookie
+      return {
+        success: true,
+        message: 'Đăng xuất thành công',
+      };
+    }
   }
 
   async findPendingUser(token: string) {
@@ -119,6 +202,11 @@ export class AuthService {
       },
       { new: true },
     );
+
+    if (!approveUser) {
+      throw new UnauthorizedException('Không tìm thấy người dùng');
+    }
+
     return {
       success: true,
       message: 'Duyệt tài khoản thành công',
@@ -129,9 +217,15 @@ export class AuthService {
   async rejectUser(id: string) {
     const rejectUser = await this.userModel.findByIdAndUpdate(
       id,
-      { hasAttemptedLogin: false },
+      {
+        hasAttemptedLogin: false,
+        isApproved: false,
+      },
       { new: true },
     );
+    if (!rejectUser) {
+      throw new UnauthorizedException('Không tìm thấy người dùng');
+    }
     return {
       success: true,
       message: 'Từ chối tài khoản thành công',
@@ -175,29 +269,75 @@ export class AuthService {
       throw new UnauthorizedException('Tài khoản không tồn tại');
     }
 
+    console.log('User before refresh:', {
+      id: user._id,
+      isApproved: user.isApproved,
+      role: user.role,
+    });
+
+    const expiresIn =
+      user.role === 'admin'
+        ? this.TOKEN_EXPIRATION.admin
+        : this.TOKEN_EXPIRATION.user;
     const newAccessToken = this.jwtService.sign(
       {
         sub: payload.sub,
         approved: user.isApproved,
         name: payload.name,
         role: payload.role,
+        email: payload.email,
       },
-      { secret: process.env.JWT_SECRET, expiresIn: '2h' },
+      { secret: process.env.JWT_SECRET, expiresIn: expiresIn },
     );
+
+    // Verify token mới để kiểm tra
+    const decodedNewToken = this.jwtService.verify(newAccessToken, {
+      secret: process.env.JWT_SECRET,
+    });
+    console.log('New token payload:', decodedNewToken);
+
     return {
+      success: true,
+      message: 'Làm mới token thành công',
       accessToken: newAccessToken,
+      role: payload.role,
     };
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  async resetUserStatus(userId: string) {
+    console.log('AuthService - Bắt đầu reset trạng thái user:', userId);
+    try {
+      const result = await this.userModel.findByIdAndUpdate(
+        userId,
+        {
+          hasAttemptedLogin: false,
+          isApproved: false,
+        },
+        { new: true },
+      );
+      console.log('AuthService - Kết quả reset trạng thái:', result);
+      if (!result) {
+        console.warn(
+          'AuthService - Không tìm thấy user để reset với ID:',
+          userId,
+        );
+      }
+      return result;
+    } catch (error) {
+      console.error('AuthService - Lỗi khi reset trạng thái user:', error);
+      throw error;
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  decodeToken(token: string): { sub: string } | null {
+    try {
+      const decoded = this.jwtService.decode(token);
+      if (decoded && typeof decoded === 'object' && 'sub' in decoded) {
+        return { sub: decoded.sub };
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
 }
