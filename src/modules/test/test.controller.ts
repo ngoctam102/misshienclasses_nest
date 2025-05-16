@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TestService } from './test.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 @Controller('test')
 export class TestController {
@@ -26,14 +28,14 @@ export class TestController {
 
   @Get('reading')
   @UseGuards(JwtAuthGuard)
-  findAllReadingTest() {
-    return this.testService.findAllReadingTest();
+  findAllReadingTest(@Query() paginationQuery: PaginationQueryDto) {
+    return this.testService.findAllReadingTest(paginationQuery);
   }
 
   @Get('listening')
   @UseGuards(JwtAuthGuard)
-  findAllListeningTest() {
-    return this.testService.findAllListeningTest();
+  findAllListeningTest(@Query() paginationQuery: PaginationQueryDto) {
+    return this.testService.findAllListeningTest(paginationQuery);
   }
 
   @Get('all')

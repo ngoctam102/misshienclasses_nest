@@ -1,10 +1,16 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { Test } from './schemas/test.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NotFoundException } from '@nestjs/common';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 @Injectable()
 export class TestService {
@@ -44,14 +50,124 @@ export class TestService {
     };
   }
 
-  async findAllReadingTest(): Promise<Test[]> {
-    const readingTests = await this.testModel.find({ type: 'reading' });
-    return readingTests as Test[];
+  async findAllReadingTest(
+    paginationQuery: PaginationQueryDto,
+  ): Promise<{ success: boolean; data: Test[]; pagination: any }> {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sort = 'created_at',
+        order = 'desc',
+        search = '',
+      } = paginationQuery;
+
+      const skip = (page - 1) * limit;
+
+      const sortOptions = {};
+      sortOptions[sort] = order === 'desc' ? -1 : 1;
+
+      const searchQuery = {
+        type: 'reading',
+        ...(search
+          ? {
+              $or: [
+                { title: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+              ],
+            }
+          : {}),
+      };
+
+      const [tests, total] = await Promise.all([
+        this.testModel
+          .find(searchQuery)
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(limit),
+        this.testModel.countDocuments(searchQuery),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        success: true,
+        data: tests as Test[],
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
+        },
+      };
+    } catch (error) {
+      console.error('Error finding reading tests:', error);
+      throw new InternalServerErrorException('Failed to get reading tests');
+    }
   }
 
-  async findAllListeningTest(): Promise<Test[]> {
-    const listeningTests = await this.testModel.find({ type: 'listening' });
-    return listeningTests as Test[];
+  async findAllListeningTest(
+    paginationQuery: PaginationQueryDto,
+  ): Promise<{ success: boolean; data: Test[]; pagination: any }> {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sort = 'created_at',
+        order = 'desc',
+        search = '',
+      } = paginationQuery;
+
+      const skip = (page - 1) * limit;
+
+      const sortOptions = {};
+      sortOptions[sort] = order === 'desc' ? -1 : 1;
+
+      const searchQuery = {
+        type: 'listening',
+        ...(search
+          ? {
+              $or: [
+                { title: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+              ],
+            }
+          : {}),
+      };
+
+      const [tests, total] = await Promise.all([
+        this.testModel
+          .find(searchQuery)
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(limit),
+        this.testModel.countDocuments(searchQuery),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        success: true,
+        data: tests as Test[],
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
+        },
+      };
+    } catch (error) {
+      console.error('Error finding listening tests:', error);
+      throw new InternalServerErrorException('Failed to get listening tests');
+    }
   }
 
   async findOne(id: string): Promise<{
