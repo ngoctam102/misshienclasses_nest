@@ -14,10 +14,21 @@ import { ScoreModule } from './modules/score/score.module';
       isGlobal: true,
     }),
     MongooseModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-        dbName: 'ielts',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const env = configService.get<string>('NODE_ENV');
+        const isProduction = env === 'production';
+        const uri = isProduction
+          ? configService.get<string>('MONGODB_URI_PRODUCTION')
+          : configService.get<string>('MONGODB_URI');
+        return {
+          uri,
+          dbName: 'ielts',
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+          retryAttempts: 3,
+          retryDelay: 1000,
+        };
+      },
       inject: [ConfigService],
     }),
     TestModule,

@@ -56,7 +56,7 @@ export class TestService {
     try {
       const {
         page = 1,
-        limit = 10,
+        limit = 9,
         sort = 'created_at',
         order = 'desc',
         search = '',
@@ -116,7 +116,7 @@ export class TestService {
     try {
       const {
         page = 1,
-        limit = 10,
+        limit = 9,
         sort = 'created_at',
         order = 'desc',
         search = '',

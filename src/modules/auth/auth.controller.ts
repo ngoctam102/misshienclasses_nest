@@ -16,28 +16,18 @@ import { Request, Response } from 'express';
 import { AdminGuard } from './guards/admin.guard';
 @Controller('auth')
 export class AuthController {
-  // Thời gian hết hạn cookie
-  private readonly COOKIE_EXPIRATION = {
-    admin: 365 * 24 * 60 * 60 * 1000, // 1 năm
-    user: 2 * 60 * 1000, // 2 giờ tính bằng milliseconds
-  };
-
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ) { 
+  ) {
     const result = await this.authService.login(loginDto);
 
     console.log('Login result:', {
       role: result.role,
-      tokenExpiration: result.role === 'admin' ? '365d' : '30s',
-      cookieExpiration:
-        result.role === 'admin'
-          ? this.COOKIE_EXPIRATION.admin
-          : this.COOKIE_EXPIRATION.user,
+      tokenExpiration: result.role === 'admin' ? '365d' : '2h',
     });
 
     // Xóa cookie cũ nếu có
@@ -48,16 +38,11 @@ export class AuthController {
       path: '/',
     });
 
-    const maxAge =
-      result.role === 'admin'
-        ? this.COOKIE_EXPIRATION.admin
-        : this.COOKIE_EXPIRATION.user;
     res.cookie('token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: maxAge,
     });
 
     return result;
@@ -117,17 +102,11 @@ export class AuthController {
     });
 
     // Set cookie mới với đầy đủ options
-    const maxAge =
-      result.role === 'admin'
-        ? this.COOKIE_EXPIRATION.admin
-        : this.COOKIE_EXPIRATION.user;
-
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict' as const,
       path: '/',
-      maxAge: maxAge,
     };
     console.log('Setting cookie with options:', cookieOptions);
 

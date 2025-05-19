@@ -12,7 +12,7 @@ export class AuthService {
   // Thời gian hết hạn token
   private readonly TOKEN_EXPIRATION = {
     admin: '365d',
-    user: '30s',
+    user: '2h',
   };
 
   constructor(
