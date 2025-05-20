@@ -27,7 +27,7 @@ export class AuthController {
 
     console.log('Login result:', {
       role: result.role,
-      tokenExpiration: result.role === 'admin' ? '365d' : '2h',
+      tokenExpiration: result.role === 'admin' ? '365d' : '30s',
     });
 
     // Xóa cookie cũ nếu có
@@ -116,13 +116,37 @@ export class AuthController {
   }
 
   @Post('logout')
-  logout(@Req() req: Request) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     console.log('hàm logout được gọi..');
     const token: string = req.cookies?.token;
     console.log('Đây là token hàm logout lấy được từ cookie: >>', token);
-    if (!token) {
-      throw new UnauthorizedException('Không tìm thấy refresh token');
+
+    // Xóa cookie với cấu hình đầy đủ
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
+    console.log('Xoá cookie thành công');
+    try {
+      if (token) {
+        try {
+          await this.authService.logout(token);
+        } catch (error) {
+          console.error('Lỗi khi logout:', error);
+        }
+      }
+      return {
+        success: true,
+        message: 'Đăng xuất thành công',
+      };
+    } catch (error) {
+      console.error('LogoutController - Lỗi khi xử lí logout:', error);
+      return {
+        success: true,
+        message: 'Đăng xuất thành công',
+      };
     }
-    return this.authService.logout(token);
   }
 }

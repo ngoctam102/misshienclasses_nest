@@ -12,7 +12,7 @@ export class AuthService {
   // Thời gian hết hạn token
   private readonly TOKEN_EXPIRATION = {
     admin: '365d',
-    user: '2h',
+    user: '30s',
   };
 
   constructor(
@@ -127,46 +127,27 @@ export class AuthService {
 
   async logout(token: string) {
     try {
-      // Thử decode token để lấy thông tin user
+      // decode token để lấy thông tin user
       const decoded = this.jwtService.decode(token);
-      if (!decoded || !decoded.sub) {
-        console.warn('AuthService - Token không hợp lệ hoặc không có sub');
-        return {
-          success: true,
-          message: 'Đăng xuất thành công',
-        };
-      }
-
-      // Reset trạng thái user
-      const result = await this.userModel.findByIdAndUpdate(
-        decoded.sub,
-        {
-          hasAttemptedLogin: false,
-          isApproved: false,
-        },
-        { new: true },
-      );
-
-      if (!result) {
-        console.warn('AuthService - Không tìm thấy user để reset trạng thái');
-      } else {
+      if (decoded && decoded.sub) {
+        // Reset trạng thái user
+        const result = await this.userModel.findByIdAndUpdate(
+          decoded.sub,
+          {
+            hasAttemptedLogin: false,
+            isApproved: false,
+          },
+          { new: true },
+        );
         console.log(
-          'AuthService - Đã reset trạng thái user thành công:',
-          result._id,
+          'LogoutService - Đã reset trạng thái user thành công',
+          result,
         );
       }
-
-      return {
-        success: true,
-        message: 'Đăng xuất thành công',
-      };
     } catch (error) {
-      console.error('AuthService - Lỗi khi logout:', error);
+      console.error('LogoutService - Lỗi khi logout:', error);
       // Vẫn trả về success để frontend có thể xóa cookie
-      return {
-        success: true,
-        message: 'Đăng xuất thành công',
-      };
+      throw error;
     }
   }
 
