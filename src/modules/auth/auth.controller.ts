@@ -36,6 +36,10 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONTEND_URL
+          : undefined,
     });
 
     res.cookie('token', result.accessToken, {
@@ -43,6 +47,10 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONTEND_URL
+          : undefined,
     });
 
     return result;
@@ -99,6 +107,10 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONTEND_URL
+          : undefined,
     });
 
     // Set cookie mới với đầy đủ options
@@ -107,6 +119,10 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict' as const,
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONTEND_URL
+          : undefined,
     };
     console.log('Setting cookie with options:', cookieOptions);
 
@@ -127,6 +143,10 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONTEND_URL
+          : undefined,
     });
     console.log('Xoá cookie thành công');
     try {

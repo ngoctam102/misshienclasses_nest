@@ -43,7 +43,7 @@ async function bootstrap() {
     },
   });
   // Global prefix
-  app.setGlobalPrefix('api'); // Đặt prefix cho các route
+  app.setGlobalPrefix('backend-api'); // Đặt prefix cho các route
 
   await app.listen(configService.get('PORT') || 3000);
 }
