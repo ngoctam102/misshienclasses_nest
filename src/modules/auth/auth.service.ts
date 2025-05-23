@@ -97,13 +97,17 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Mật khẩu không chính xác');
     }
+
+    // Reset trạng thái user khi đăng nhập lại
     await this.userModel.findByIdAndUpdate(
       user._id,
       {
         hasAttemptedLogin: true,
+        isApproved: false, // Reset trạng thái phê duyệt
       },
       { new: true },
     );
+
     const expiresIn =
       user.role === 'admin'
         ? this.TOKEN_EXPIRATION.admin
@@ -113,7 +117,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      approved: user.isApproved,
+      approved: false, // Luôn set approved là false khi đăng nhập lại
     };
     return {
       success: true,

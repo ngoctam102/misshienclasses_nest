@@ -16,13 +16,25 @@ async function bootstrap() {
     origin: isProduction
       ? [configService.get('FRONTEND_URL')] // Chỉ cho phép domain production
       : 'http://localhost:3000', // Cho phép cả localhost:3000
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     credentials: true, // Cho phép gửi cookie và header Authorization
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'], // Thêm Cookie vào allowed headers
-    exposedHeaders: ['Set-Cookie', 'Authorization'], // Thêm Set-Cookie vào exposed headers
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cookie',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Cache-Control',
+      'X-XSS-Protection',
+      'X-Frame-Options',
+      'X-Content-Type-Options',
+      'Referrer-Policy',
+    ],
+    exposedHeaders: ['Set-Cookie', 'Authorization'],
     maxAge: 86400, // 24 hours
   };
-  app.enableCors(corsOptions); // Cấu hình CORS
+  app.enableCors(corsOptions);
 
   // Sử dụng cookie-parser
   app.use(cookieParser());
