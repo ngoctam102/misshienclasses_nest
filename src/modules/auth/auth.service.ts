@@ -77,8 +77,6 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<{
-    success: boolean;
-    message: string;
     accessToken: string;
     role: string;
   }> {
@@ -120,8 +118,6 @@ export class AuthService {
       approved: false, // Luôn set approved là false khi đăng nhập lại
     };
     return {
-      success: true,
-      message: 'Đăng nhập thành công, chờ duyệt tài khoản',
       accessToken: await this.jwtService.signAsync(payload, {
         expiresIn: expiresIn,
       }),
@@ -282,8 +278,6 @@ export class AuthService {
     console.log('New token payload:', decodedNewToken);
 
     return {
-      success: true,
-      message: 'Làm mới token thành công',
       accessToken: newAccessToken,
       role: payload.role,
     };

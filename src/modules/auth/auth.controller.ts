@@ -23,11 +23,11 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.login(loginDto);
+    const { accessToken, role } = await this.authService.login(loginDto);
 
     console.log('Login result:', {
-      role: result.role,
-      tokenExpiration: result.role === 'admin' ? '365d' : '30s',
+      role: role,
+      tokenExpiration: role === 'admin' ? '365d' : '30s',
     });
 
     // Xóa cookie cũ nếu có
@@ -42,7 +42,7 @@ export class AuthController {
           : undefined,
     });
 
-    res.cookie('token', result.accessToken, {
+    res.cookie('token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -53,7 +53,12 @@ export class AuthController {
           : undefined,
     });
 
-    return result;
+    return {
+      success: true,
+      message: 'Đăng nhập thành công, chờ duyệt tài khoản',
+      accessToken: accessToken,
+      role: role,
+    };
   }
 
   @Get('pending')
@@ -98,8 +103,8 @@ export class AuthController {
     }
 
     console.log('Old token from cookie:', token);
-    const result = await this.authService.refreshToken(token);
-    console.log('New token from service:', result.accessToken);
+    const { accessToken, role } = await this.authService.refreshToken(token);
+    console.log('New token from service:', accessToken);
 
     // Xóa cookie cũ với đầy đủ options
     res.clearCookie('token', {
@@ -126,9 +131,14 @@ export class AuthController {
     };
     console.log('Setting cookie with options:', cookieOptions);
 
-    res.cookie('token', result.accessToken, cookieOptions);
+    res.cookie('token', accessToken, cookieOptions);
 
-    return result;
+    return {
+      success: true,
+      message: 'Làm mới token thành công',
+      accessToken: accessToken,
+      role: role,
+    };
   }
 
   @Post('logout')
