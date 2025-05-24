@@ -96,6 +96,10 @@ class Passage {
   @IsString()
   audio_url?: string;
 
+  @IsOptional()
+  @IsString()
+  transcript?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuestionGroup)

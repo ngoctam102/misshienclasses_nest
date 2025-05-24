@@ -80,6 +80,9 @@ class Passage {
   @Prop()
   audio_url?: string; // listening audio
 
+  @Prop()
+  transcript?: string; // listening transcript
+
   @Prop({ type: [QuestionGroupSchema], default: [] })
   question_groups: QuestionGroup[];
 }

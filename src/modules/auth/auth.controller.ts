@@ -38,7 +38,7 @@ export class AuthController {
       path: '/',
       domain:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_DOMAIN
           : undefined,
     });
 
@@ -49,7 +49,7 @@ export class AuthController {
       path: '/',
       domain:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_DOMAIN
           : undefined,
     });
 
@@ -114,7 +114,7 @@ export class AuthController {
       path: '/',
       domain:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_DOMAIN
           : undefined,
     });
 
@@ -126,7 +126,7 @@ export class AuthController {
       path: '/',
       domain:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_DOMAIN
           : undefined,
     };
     console.log('Setting cookie with options:', cookieOptions);
@@ -155,7 +155,7 @@ export class AuthController {
       path: '/',
       domain:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_DOMAIN
           : undefined,
     });
     console.log('Xoá cookie thành công');
