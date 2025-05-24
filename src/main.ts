@@ -5,11 +5,17 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import * as path from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as express from 'express';
+
 console.log('STATIC PATH:', path.resolve(__dirname, '..', 'public'));
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   const isProduction = configService.get('NODE_ENV') === 'production';
+
+  // Cấu hình giới hạn kích thước request
+  app.use(express.json({ limit: '20mb' }));
+  app.use(express.urlencoded({ limit: '20mb', extended: true }));
 
   // Cấu hình CORS
   const corsOptions = {
