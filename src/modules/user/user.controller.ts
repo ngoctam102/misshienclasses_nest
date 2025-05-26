@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,6 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 @Controller('user')
 export class UserController {
@@ -32,8 +34,8 @@ export class UserController {
 
   @Get('all')
   @UseGuards(AdminGuard)
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query() paginationQuery: PaginationQueryDto) {
+    return this.userService.findAll(paginationQuery);
   }
 
   @Get(':id')

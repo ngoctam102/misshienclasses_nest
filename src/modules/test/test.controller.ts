@@ -40,8 +40,8 @@ export class TestController {
 
   @Get('all')
   @UseGuards(AdminGuard)
-  findAll() {
-    return this.testService.findAll();
+  findAll(@Query() paginationQuery: PaginationQueryDto) {
+    return this.testService.findAll(paginationQuery);
   }
 
   @Get('by-id/:id')

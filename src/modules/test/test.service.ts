@@ -37,17 +37,61 @@ export class TestService {
     };
   }
 
-  async findAll(): Promise<{
-    success: boolean;
-    message: string;
-    data: Test[];
-  }> {
-    const tests = await this.testModel.find();
-    return {
-      success: true,
-      message: 'Get all tests successfully',
-      data: tests as Test[],
-    };
+  async findAll(paginationQuery: PaginationQueryDto) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sort = 'createdAt',
+        order = 'desc',
+        search = '',
+      } = paginationQuery;
+
+      const skip = (page - 1) * limit;
+
+      const sortOptions = {};
+      sortOptions[sort] = order === 'desc' ? -1 : 1;
+
+      const searchQuery = search
+        ? {
+            $or: [
+              { title: { $regex: search, $options: 'i' } },
+              { test_slug: { $regex: search, $options: 'i' } },
+              { type: { $regex: search, $options: 'i' } },
+              { level: { $regex: search, $options: 'i' } },
+            ],
+          }
+        : {};
+
+      const [tests, total] = await Promise.all([
+        this.testModel
+          .find(searchQuery)
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(limit),
+        this.testModel.countDocuments(searchQuery),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        success: true,
+        data: tests,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
+        },
+      };
+    } catch (error) {
+      console.error('Error finding tests:', error);
+      throw new InternalServerErrorException('Failed to get tests');
+    }
   }
 
   async findAllReadingTest(

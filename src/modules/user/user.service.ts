@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user';
 import { RecaptchaService } from '../auth/recaptcha.service';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 @Injectable()
 export class UserService {
@@ -65,8 +67,59 @@ export class UserService {
     }
   }
 
-  findAll() {
-    return this.userModel.find();
+  async findAll(paginationQuery: PaginationQueryDto) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sort = 'createdAt',
+        order = 'desc',
+        search = '',
+      } = paginationQuery;
+
+      const skip = (page - 1) * limit;
+
+      const sortOptions = {};
+      sortOptions[sort] = order === 'desc' ? -1 : 1;
+
+      const searchQuery = search
+        ? {
+            $or: [
+              { name: { $regex: search, $options: 'i' } },
+              { email: { $regex: search, $options: 'i' } },
+            ],
+          }
+        : {};
+
+      const [users, total] = await Promise.all([
+        this.userModel
+          .find(searchQuery)
+          .sort(sortOptions)
+          .skip(skip)
+          .limit(limit),
+        this.userModel.countDocuments(searchQuery),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        success: true,
+        data: users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
+        },
+      };
+    } catch (error) {
+      console.error('Error finding users:', error);
+      throw new InternalServerErrorException('Failed to get users');
+    }
   }
 
   findOne(id: string) {
